@@ -216,6 +216,26 @@ export default function ModuleB() {
             </div>
           )}
 
+          {/* Early Rejection Flag & High Drift Warning Banner */}
+          {analysis && analysis.sufficient && analysis.rejectionFlagged && (
+            <div style={{ background: "#2a1515", border: "1px solid #e57463", padding: "18px 22px", borderRadius: "6px", marginBottom: "25px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
+                <AlertTriangle size={24} style={{ color: "#e57463", flexShrink: 0 }} />
+                <div>
+                  <h4 style={{ margin: "0 0 4px", color: "#e57463", fontFamily: "IBM Plex Mono", fontSize: "14px", letterSpacing: "0.08em" }}>
+                    ⚠️ EARLY REJECTION FLAG: HIGH DRIFT RATE DETECTED
+                  </h4>
+                  <p style={{ margin: 0, color: "#f6c4ba", fontSize: "12px", lineHeight: "1.4" }}>
+                    {analysis.rejectionReason} (Calculated Dynamic Safety Slope = {analysis.dynamicSafetySlopeThreshold.toFixed(4)} µA/h).
+                  </p>
+                </div>
+              </div>
+              <span style={{ background: "#e57463", color: "#111412", fontWeight: 700, padding: "6px 12px", borderRadius: "4px", fontSize: "11px", fontFamily: "IBM Plex Mono", whiteSpace: "nowrap" }}>
+                REJECT @ 24H
+              </span>
+            </div>
+          )}
+
           {/* Interactive Recharts Graph */}
           {analysis && analysis.sufficient && (
             <div style={{ background: "#161a18", border: "1px solid #334038", padding: "25px", borderRadius: "4px", marginBottom: "30px" }}>

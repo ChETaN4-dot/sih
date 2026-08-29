@@ -1,5 +1,7 @@
 import { datasetStore, ComponentSummary } from "../data/datasetStore";
 import { fitNASARidge, FittedDriftModel, NASATrainingRow } from "../nasaBatteryModel";
+import { getEngineeringCriterionForComponent } from "../data/engineeringCriteria";
+import { getDynamicSafetySlopeThreshold } from "./riskEngine";
 
 export type ModelEvalResult = {
   predicted168h: number;
@@ -376,6 +378,23 @@ export function analyzeComponentDrift(componentId: string): ComponentDriftAnalys
     bestModelByCV = "randomForest";
   }
 
+  const specLimit = getEngineeringCriterionForComponent(component.capacitance_uF, component.rated_voltage_V).value;
+  const dynamicSafetySlopeThreshold = getDynamicSafetySlopeThreshold(specLimit);
+  const predicted168h = ridgePred168;
+  const predictedSlopeRate = (predicted168h - v0) / 168;
+  const safetySlopeExceeded = linearSlope > dynamicSafetySlopeThreshold || predictedSlopeRate > dynamicSafetySlopeThreshold;
+  const predictedSpecExceeded = predicted168h > specLimit;
+  const rejectionFlagged = safetySlopeExceeded || predictedSpecExceeded;
+
+  let rejectionReason = "";
+  if (predictedSpecExceeded) {
+    rejectionReason = `EARLY REJECTION FLAG: Predicted 168h DCL (${predicted168h.toFixed(2)} µA) exceeds datasheet spec ceiling (${specLimit} µA).`;
+  } else if (safetySlopeExceeded) {
+    rejectionReason = `EARLY REJECTION FLAG: Predicted 168h degradation slope (${predictedSlopeRate.toFixed(4)} µA/h) or early slope (${linearSlope.toFixed(4)} µA/h) exceeds calculated dynamic safety slope threshold (${dynamicSafetySlopeThreshold.toFixed(4)} µA/h).`;
+  } else {
+    rejectionReason = `NORMAL DRIFT: Predicted 168h DCL (${predicted168h.toFixed(2)} µA) remains below spec limit (${specLimit} µA) and dynamic safety slope (${dynamicSafetySlopeThreshold.toFixed(4)} µA/h).`;
+  }
+
   const comparisonSummary = `Model Comparison (LOCO Grouped Split by Component): Ridge MAE = ${locoEval.ridgeMae.toFixed(3)} µA, Random Forest MAE = ${locoEval.rfMae.toFixed(3)} µA, Linear MAE = ${locoEval.linearMae.toFixed(3)} µA. Selected best model: ${bestModelByCV.toUpperCase()}. Exponential curve fit R² = ${expFit.r2.toFixed(3)}.`;
 
   return {
@@ -387,6 +406,12 @@ export function analyzeComponentDrift(componentId: string): ComponentDriftAnalys
     pctChange,
     earlySlope: linearSlope,
     overallSlope,
+    specLimit,
+    dynamicSafetySlopeThreshold,
+    safetySlopeExceeded,
+    predictedSpecExceeded,
+    rejectionFlagged,
+    rejectionReason,
     predictions: {
       linear: {
         predicted168h: linearPred168,
