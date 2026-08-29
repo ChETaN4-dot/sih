@@ -16,6 +16,7 @@ import {
 import {
   ArrowLeft,
   ShieldCheck,
+  CheckCircle,
   AlertTriangle,
   FileText,
   Download,
