@@ -17,7 +17,10 @@ export type TierEvaluationResult = {
   fn: number;
   recall: number;
   precision: number;
+  f1: number;
   fnr: number;
+  fpr: number;
+  accuracy: number;
 };
 
 export type EvaluationReport = {
@@ -114,7 +117,12 @@ export function evaluateModuleA(): EvaluationReport {
     const calcTierResult = (tName: "OBVIOUS" | "MODERATE" | "SUBTLE" | "ALL", stats: { total: number; tp: number; fp: number; tn: number; fn: number }): TierEvaluationResult => {
       const recall = stats.tp + stats.fn > 0 ? stats.tp / (stats.tp + stats.fn) : 0;
       const precision = stats.tp + stats.fp > 0 ? stats.tp / (stats.tp + stats.fp) : 0;
+      const f1 = precision + recall > 0 ? (2 * precision * recall) / (precision + recall) : 0;
       const fnr = stats.tp + stats.fn > 0 ? stats.fn / (stats.tp + stats.fn) : 0;
+      const fpr = stats.fp + stats.tn > 0 ? stats.fp / (stats.fp + stats.tn) : 0;
+      const totalPop = stats.tp + stats.tn + stats.fp + stats.fn;
+      const accuracy = totalPop > 0 ? (stats.tp + stats.tn) / totalPop : 0;
+
       return {
         tier: tName,
         totalInjected: stats.total,
@@ -124,7 +132,10 @@ export function evaluateModuleA(): EvaluationReport {
         fn: stats.fn,
         recall: Number(recall.toFixed(4)),
         precision: Number(precision.toFixed(4)),
+        f1: Number(f1.toFixed(4)),
         fnr: Number(fnr.toFixed(4)),
+        fpr: Number(fpr.toFixed(4)),
+        accuracy: Number(accuracy.toFixed(4)),
       };
     };
 

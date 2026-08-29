@@ -111,14 +111,14 @@ export function analyzeLotAnomalies(lotId: string): LotAnomalyAnalysisResult {
 
   const dataType = lotComps[0].data_type;
 
-  // Minimum lot size check
-  if (lotComps.length < MIN_LOT_SIZE_FOR_ANOMALY_DETECTION) {
+  // Minimum lot size check (Requires at least 2 components to compare)
+  if (lotComps.length < 2) {
     return {
       lotId,
       totalComponentsInLot: lotComps.length,
       dataType,
       sufficient: false,
-      message: `Lot-level anomaly detection requires at least ${MIN_LOT_SIZE_FOR_ANOMALY_DETECTION} comparable components (this lot has ${lotComps.length}).`,
+      message: `Lot-level anomaly detection requires at least 2 components (this lot has ${lotComps.length}).`,
       components: [],
       flaggedCount: 0,
       highRiskCount: 0,

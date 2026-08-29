@@ -37,6 +37,7 @@ export default function UnifiedAnalysis() {
   const [showTechnicalDetails, setShowTechnicalDetails] = useState<boolean>(false);
   const [showSpecLimit, setShowSpecLimit] = useState<boolean>(true);
   const [zoomRange, setZoomRange] = useState<[number, number]>([0, 168]);
+  const [showAllEnvFactors, setShowAllEnvFactors] = useState<boolean>(false);
 
   // Queries
   const componentsQuery = trpc.analysis.getComponents.useQuery();
@@ -506,10 +507,10 @@ export default function UnifiedAnalysis() {
 
           {/* Bottom Grid: Engineering Spec Criteria Store vs Environmental Context Layer */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "30px" }}>
-            {/* Engineering Criteria Store Card */}
+            {/* Engineering Criteria Reference Resolver Card */}
             <div style={{ background: "#161a18", border: "1px solid #334038", padding: "22px", borderRadius: "4px" }}>
               <h3 style={{ margin: "0 0 15px", fontSize: "16px", display: "flex", alignItems: "center", gap: "8px", color: "#e8a253" }}>
-                <ShieldCheck size={18} /> Qualified Engineering Criteria Storage
+                <ShieldCheck size={18} /> Engineering Reference & Criteria Resolver
               </h3>
 
               <div style={{ background: "#1d2420", border: "1px solid #483d2d", padding: "16px", borderRadius: "3px", fontSize: "12.5px" }}>
@@ -518,8 +519,16 @@ export default function UnifiedAnalysis() {
                   <strong style={{ color: "#e8a253" }}>{data.specCriterion.criterion_name}</strong>
                 </div>
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
-                  <span style={{ color: "#8a9588" }}>Spec Limit Ceiling:</span>
-                  <strong style={{ fontFamily: "IBM Plex Mono", fontSize: "14px" }}>{data.specCriterion.value} {data.specCriterion.unit}</strong>
+                  <span style={{ color: "#8a9588" }}>Calculated Baseline DCL:</span>
+                  <strong style={{ fontFamily: "IBM Plex Mono", fontSize: "14px", color: "#d6f24a" }}>
+                    {data.specCriterion.value} {data.specCriterion.unit}
+                  </strong>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
+                  <span style={{ color: "#8a9588" }}>Status / Classification:</span>
+                  <span style={{ background: "#d6f24a22", color: "#d6f24a", padding: "2px 6px", borderRadius: "3px", fontSize: "10px", fontFamily: "IBM Plex Mono" }}>
+                    {data.specCriterion.status_label ?? "Calculated Baseline Criterion"}
+                  </span>
                 </div>
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
                   <span style={{ color: "#8a9588" }}>Applicability:</span>
@@ -532,38 +541,74 @@ export default function UnifiedAnalysis() {
                 <div style={{ marginTop: "10px", paddingTop: "10px", borderTop: "1px solid #3a3225", color: "#a6b0a2", fontSize: "11.5px", lineHeight: "1.4" }}>
                   {data.specCriterion.description}
                 </div>
+                <div style={{ marginTop: "8px", color: "#8a9588", fontSize: "11px", fontStyle: "italic" }}>
+                  Status: {data.specCriterion.qualified_limit_status}
+                </div>
               </div>
             </div>
 
             {/* Environmental Context Layer Card */}
             <div style={{ background: "#161a18", border: "1px solid #334038", padding: "22px", borderRadius: "4px" }}>
-              <h3 style={{ margin: "0 0 15px", fontSize: "16px", display: "flex", alignItems: "center", gap: "8px", color: "#60a5fa" }}>
-                <Layers size={18} /> Environmental Context Layer (14 Factors)
-              </h3>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "15px" }}>
+                <h3 style={{ margin: 0, fontSize: "16px", display: "flex", alignItems: "center", gap: "8px", color: "#60a5fa" }}>
+                  <Layers size={18} /> Environmental Context Layer
+                </h3>
+                <button
+                  onClick={() => setShowAllEnvFactors(!showAllEnvFactors)}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: "#60a5fa",
+                    fontSize: "11px",
+                    fontFamily: "IBM Plex Mono",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "4px"
+                  }}
+                >
+                  {showAllEnvFactors ? "Show Measured Only" : "Show All Context Factors"} {showAllEnvFactors ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+                </button>
+              </div>
 
               <div style={{ maxHeight: "230px", overflowY: "auto", border: "1px solid #28343f", borderRadius: "3px" }}>
                 <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "11px", fontFamily: "IBM Plex Mono" }}>
                   <thead>
                     <tr style={{ background: "#1d2420", color: "#8a9588", textAlign: "left", borderBottom: "1px solid #334038" }}>
                       <th style={{ padding: "6px 8px" }}>FACTOR</th>
-                      <th style={{ padding: "6px 8px" }}>DATA / ML STATUS</th>
-                      <th style={{ padding: "6px 8px" }}>STANDARD CITATION</th>
+                      <th style={{ padding: "6px 8px" }}>VALUE</th>
+                      <th style={{ padding: "6px 8px" }}>STATUS</th>
+                      <th style={{ padding: "6px 8px" }}>WHY IT MATTERS</th>
+                      <th style={{ padding: "6px 8px" }}>SOURCE</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {data.envContext.map((f) => (
+                    {(showAllEnvFactors ? data.envContext : data.envContext.filter(f => f.status === "MEASURED")).map((f) => (
                       <tr key={f.factor_id} style={{ borderBottom: "1px solid #232d27" }}>
-                        <td style={{ padding: "6px 8px", fontWeight: "bold", color: f.data_available ? "#d6f24a" : "#edf0e6" }}>
-                          {f.name} {f.value_display ? `(${f.value_display})` : ""}
+                        <td style={{ padding: "6px 8px", fontWeight: "bold", color: "#edf0e6" }}>
+                          {f.name}
+                        </td>
+                        <td style={{ padding: "6px 8px", color: f.status === "MEASURED" ? "#d6f24a" : "#8a9588" }}>
+                          {f.value_display}
                         </td>
                         <td style={{ padding: "6px 8px" }}>
-                          {f.data_available ? (
-                            <span style={{ color: "#d6f24a" }}>Active Feature</span>
-                          ) : (
-                            <span style={{ color: "#8a9588" }}>Context Only</span>
-                          )}
+                          <span style={{
+                            padding: "2px 6px",
+                            borderRadius: "3px",
+                            fontSize: "9.5px",
+                            background: f.status === "MEASURED" ? "#d6f24a22" : f.status === "CONTEXT ONLY" ? "#60a5fa22" : "#334038",
+                            color: f.status === "MEASURED" ? "#d6f24a" : f.status === "CONTEXT ONLY" ? "#60a5fa" : "#8a9588",
+                            border: `1px solid ${f.status === "MEASURED" ? "#d6f24a44" : f.status === "CONTEXT ONLY" ? "#60a5fa44" : "#445248"}`
+                          }}>
+                            {f.status}
+                          </span>
                         </td>
-                        <td style={{ padding: "6px 8px", color: "#a6b0a2", fontSize: "10px" }}>{f.citation}</td>
+                        <td style={{ padding: "6px 8px", color: "#a6b0a2", fontSize: "10px", maxWidth: "200px" }}>
+                          {f.why_it_matters}
+                        </td>
+                        <td style={{ padding: "6px 8px", color: "#8a9588", fontSize: "10px" }}>
+                          {f.source}
+                        </td>
                       </tr>
                     ))}
                   </tbody>

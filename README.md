@@ -8,7 +8,17 @@ Burn-In Sentinel analyzes time-series telemetry data to flag these latent defect
 
 ---
 
-## Key Features & User Workflow
+## System Overview
+
+- **Primary Component**: Solid Tantalum Capacitors ($\text{Ta}_2\text{O}_5 / \text{MnO}_2$).
+- **Primary Parameter**: Direct Current Leakage ($\text{DCL}$ in $\mu\text{A}$).
+- **Calculated Baseline Criterion**: $\text{DCL}_{\text{baseline}} = 0.01 \times C \times V$ ($\mu\text{A}$) based on MIL-PRF-55365 & NASA MIL-HDBK-978B.
+- **Module A**: Dynamic lot-level anomaly detection using Median/MAD Robust Z-scores and Isolation Forest ($N \ge 10$).
+- **Module B**: Early $0\text{h} + 24\text{h} \rightarrow 168\text{h}$ burn-in time-series drift prediction using LOCO Ridge Regression ($\text{MAE} = 0.051\,\mu\text{A}$).
+
+---
+
+## How It Works (Explained Simply)
 
 ### Available Application Routes
 

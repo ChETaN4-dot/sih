@@ -3,10 +3,10 @@
 ## 1. Executive Test Summary
 
 - **Automated Test Framework**: Vitest v2.1.9
-- **Total Test Files**: 9 files
-- **Total Automated Unit Tests**: 32 tests
-- **Automated Test Pass Rate**: 100% (32 passed, 0 failed)
-- **Production Build Status**: Clean (`npx vite build` completed in 27.30s with 0 errors)
+- **Total Test Files**: 10 files
+- **Total Automated Unit Tests**: 43 tests
+- **Automated Test Pass Rate**: 100% (43 passed, 0 failed)
+- **Production Build Status**: Clean (`npx vite build` completed in ~27s with 0 errors)
 
 ---
 
@@ -19,11 +19,13 @@
 | `DL-01` | Future Checkpoint Isolation | Corrupted 96h and 168h values ($9999\,\mu\text{A}$) | 24h prediction output remains 100% identical | `predicted168h` identical to 5 decimal places | **PASS** |
 | `DL-02` | Ground-Truth Label Isolation | Component `TAL-A-005` prediction call | Prediction uses numerical DCL values only; 0 label strings accessed | Numerical predictions returned cleanly | **PASS** |
 
-### 2. `server/ml/anomalyEvaluation.test.ts` (1 test)
+### 2. `server/ml/anomalyEvaluation.test.ts` (3 tests)
 
 | Test ID | Description | Test Input | Expected Result | Actual Result | Status |
 |---|---|---|---|---|---|
-| `AE-01` | Live Tiered Anomaly Ground-Truth Benchmark | 54 components, 12 injected anomalies across 3 lots (`LOT-A`, `LOT-B`, `LOT-C`) | Obvious Tier Recall $\ge 0.90$ ($90\%$), live metrics logged for Moderate & Subtle tiers | Obvious Recall $= 1.00$ ($100\%$), Moderate Recall $= 1.00$ ($100\%$), Subtle Recall $= 0.67$ ($67\%$ strict / $100\%$ loose) | **PASS** |
+| `AE-01` | Ground-Truth Metrics & Formula Verification | 54 components across `LOT-A`, `LOT-B`, `LOT-C` (12 injected anomalies) | Strict metrics: TP=10, TN=42, FP=0, FN=2, Precision=1.0, Recall=0.8333, F1=0.9091, FNR=0.1667, FPR=0.0, Accuracy=0.9630 | Formulas verified mathematically; TP/TN/FP/FN and F1 match exact theoretical definitions | **PASS** |
+| `AE-02` | Strict Data Separation Verification | Inspection of production files (`lotAnomaly.ts`, `riskEngine.ts`, `driftModels.ts`, `screening.ts`) | `groundTruthAnomalies.json` is NEVER imported or referenced by production detection engines | 0 imports/references found in production code | **PASS** |
+| `AE-03` | Production Anomaly Scoring Isolation | Evaluation call on `LOT-A` | Scoring operates independently without requiring or accessing ground-truth labels | Robust Z & Isolation Forest scores returned cleanly | **PASS** |
 
 ### 3. `server/ml/lotAnomaly.test.ts` (4 tests)
 

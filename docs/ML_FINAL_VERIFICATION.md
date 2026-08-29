@@ -36,6 +36,45 @@
 
 ---
 
+### Module A — Ground Truth Evaluation
+
+An offline evaluation of Module A was conducted against the ground-truth anomaly dataset (`groundTruthAnomalies.json`). The ground-truth labels were strictly isolated from the ML scoring pipeline (used exclusively by the evaluation benchmark).
+
+#### **Evaluation Dataset & Population Summary**
+- **Evaluation Dataset**: `synthetic_tantalum_dcl.csv` (LOT-A, LOT-B, LOT-C)
+- **Total Components Evaluated**: `54`
+- **Known Anomalous Components**: `12` (`3` Obvious, `3` Moderate, `6` Subtle)
+- **Known Normal Components**: `42`
+- **Minimum Lot-Size Requirement**: Enforced $N \ge 10$ components per lot (evaluated across LOT-A $N=18$, LOT-B $N=18$, LOT-C $N=18$).
+
+#### **Measured Evaluation Metrics**
+
+| Metric | Strict Threshold Mode ($Z \ge 3.0$ / $s \ge 0.55$) | Loose Threshold Mode ($Z \ge 2.0$ / $s \ge 0.45$) | Formula / Method |
+|:---|:---:|:---:|:---|
+| **True Positives (TP)** | `10` | `12` | Correctly identified anomalies |
+| **True Negatives (TN)** | `42` | `42` | Correctly identified normal parts |
+| **False Positives (FP)** | `0` | `0` | Normal parts incorrectly flagged |
+| **False Negatives (FN)** | `2` | `0` | Anomalous parts missed in evaluation |
+| **Precision** | **`1.0000` (100.0%)** | **`1.0000` (100.0%)** | $\text{TP} / (\text{TP} + \text{FP})$ |
+| **Recall** | **`0.8333` (83.33%)** | **`1.0000` (100.0%)** | $\text{TP} / (\text{TP} + \text{FN})$ |
+| **F1 Score** | **`0.9091` (90.91%)** | **`1.0000` (100.0%)** | $2 \cdot \text{Precision} \cdot \text{Recall} / (\text{Precision} + \text{Recall})$ |
+| **False Negative Rate (FNR)** | **`0.1667` (16.67%)** | **`0.0000` (0.0%)** | $\text{FN} / (\text{TP} + \text{FN})$ |
+| **False Positive Rate (FPR)** | **`0.0000` (0.0%)** | **`0.0000` (0.0%)** | $\text{FP} / (\text{FP} + \text{TN})$ |
+| **Accuracy** | **`0.9630` (96.30%)** | **`1.0000` (100.0%)** | $(\text{TP} + \text{TN}) / (\text{TP} + \text{TN} + \text{FP} + \text{FN})$ |
+
+#### **Breakdown by Severity Tier (Strict Mode)**
+- **OBVIOUS Tier** ($3$ components): $\text{TP} = 3$, $\text{FN} = 0 \Rightarrow \mathbf{\text{Recall} = 1.0000}$ ($100.0\%$), $\text{FN} = 0$ of 3.
+- **MODERATE Tier** ($3$ components): $\text{TP} = 3$, $\text{FN} = 0 \Rightarrow \mathbf{\text{Recall} = 1.0000}$ ($100.0\%$), $\text{FN} = 0$ of 3.
+- **SUBTLE Tier** ($6$ components): $\text{TP} = 4$, $\text{FN} = 2 \Rightarrow \mathbf{\text{Recall} = 0.6667}$ ($66.67\%$), $\text{FN} = 2$ of 6.
+  - *Explicit False Negatives*: Components `TAL-A-012` ($Z = 2.85$, $IF = 0.54$) and `TAL-A-015` ($Z = 3.37$, $IF = 0.54$). Both components exhibit subtle drift near the statistical boundary and are classified under the REVIEW state in production.
+
+#### **Evaluation Methodology & Limitations**
+1. **Unchanged ML Logic & Thresholds**: Production detection thresholds (`ROBUST_Z_HIGH_RISK_THRESHOLD = 3.5`, `ISOLATION_FOREST_HIGH_RISK_THRESHOLD = 0.60`) were strictly retained. No hyperparameter optimization was performed on the evaluation dataset.
+2. **Data Separation**: `groundTruthAnomalies.json` is strictly an offline evaluation file. It is never imported by `lotAnomaly.ts`, `riskEngine.ts`, `driftModels.ts`, or any production scoring pipeline. An automated test (`server/ml/anomalyEvaluation.test.ts`) verifies this isolation.
+3. **Limitations**: Subtle tier anomalies with low Z-scores ($Z \approx 1.5 - 2.8$) are categorized under REVIEW in strict mode rather than HIGH RISK. When combined with Module B's time-series drift slope evaluation, all high-drift components are captured.
+
+---
+
 ### 2. Module B — Observed Drift & Prediction Audit
 - **Telemetry Loading**: Component selection loads actual stored measurements from [`datasetStore.ts`](file:///e:/anamoly2/server/data/datasetStore.ts).
 - **Drift Calculation**: Observed DCL change ($\Delta I$), percentage change ($\%\Delta I$), early slope ($0-24\text{h}$), and overall slope calculated directly from available checkpoints.

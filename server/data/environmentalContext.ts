@@ -1,178 +1,140 @@
+export type FactorStatus = "MEASURED" | "CONTEXT ONLY" | "NOT AVAILABLE";
+
 export type EnvironmentalFactor = {
   factor_id: string;
   name: string;
   category: "Thermal" | "Electrical" | "Mechanical" | "Atmospheric" | "Radiation" | "Contamination";
-  data_available: boolean;
+  status: FactorStatus;
+  value_display: string;
   ML_feature: boolean;
-  engineering_context_only: boolean;
-  value_display?: string;
-  citation: string;
+  why_it_matters: string;
+  source: string;
   standard_ref: string;
-  notes: string;
 };
 
 export function getEnvironmentalContextForComponent(
-  temperatureC: number,
-  voltageV: number,
-  burnInHours: number,
+  temperatureC?: number,
+  voltageV?: number,
+  burnInHours?: number,
+  componentType: string = "Tantalum MnO2 chip capacitor (solid)"
 ): EnvironmentalFactor[] {
-  return [
+  const isTantalum = componentType.toLowerCase().includes("tantalum");
+
+  const tempVal = temperatureC !== undefined ? `${temperatureC} °C` : "Not measured";
+  const tempStatus: FactorStatus = temperatureC !== undefined ? "MEASURED" : "NOT AVAILABLE";
+
+  const voltVal = voltageV !== undefined ? `${voltageV} V` : "Not measured";
+  const voltStatus: FactorStatus = voltageV !== undefined ? "MEASURED" : "NOT AVAILABLE";
+
+  const durationVal = burnInHours !== undefined ? `${burnInHours} h` : "Not measured";
+  const durationStatus: FactorStatus = burnInHours !== undefined ? "MEASURED" : "NOT AVAILABLE";
+
+  const factors: EnvironmentalFactor[] = [
     {
       factor_id: "TEMP",
       name: "Test Temperature",
       category: "Thermal",
-      data_available: true,
-      ML_feature: true,
-      engineering_context_only: false,
-      value_display: `${temperatureC}°C`,
-      citation: "Direct burn-in chamber monitoring measurement",
+      status: tempStatus,
+      value_display: tempVal,
+      ML_feature: temperatureC !== undefined,
+      why_it_matters: "Active thermal stress condition. Higher temperature accelerates oxygen vacancy mobility in dielectric.",
+      source: temperatureC !== undefined ? "Dataset / Chamber Telemetry" : "System Registry",
       standard_ref: "MIL-STD-883 Method 1015 / ECSS-Q-ST-60-05C",
-      notes: "Active stress factor. Higher temperature accelerates oxygen vacancy mobility and electron injection across Ta2O5 dielectric.",
     },
     {
       factor_id: "VOLT",
       name: "Applied Bias Voltage",
       category: "Electrical",
-      data_available: true,
-      ML_feature: true,
-      engineering_context_only: false,
-      value_display: `${voltageV} V`,
-      citation: "Direct burn-in test station power supply telemetry",
+      status: voltStatus,
+      value_display: voltVal,
+      ML_feature: voltageV !== undefined,
+      why_it_matters: "Active electrical stress condition. Electric field across anodic oxide layer accelerates dielectric degradation.",
+      source: voltageV !== undefined ? "Dataset / Power Supply Telemetry" : "System Registry",
       standard_ref: "MIL-PRF-55365 Voltage Acceleration Rules",
-      notes: "Active stress factor. Electric field across anodic oxide layer accelerates dielectric degradation rate.",
     },
     {
       factor_id: "DURATION",
       name: "Burn-In Duration",
       category: "Electrical",
-      data_available: true,
-      ML_feature: true,
-      engineering_context_only: false,
-      value_display: `${burnInHours} h`,
-      citation: "Recorded test elapsed time checkpoints",
-      standard_ref: "NASA EEE-INST-002 Table 2A (168h standard screening)",
-      notes: "Active time axis for time-dependent DCL drift prediction.",
-    },
-    {
-      factor_id: "TEMP_CYC",
-      name: "Temperature Cycling",
-      category: "Thermal",
-      data_available: false,
-      ML_feature: false,
-      engineering_context_only: true,
-      citation: "NASA EEE-INST-002 Section 4 / MIL-STD-883 Method 1010",
-      standard_ref: "MIL-STD-883K Method 1010 Condition B",
-      notes: "No in-situ telemetry collected during thermal ramp cycles. Provided as screening context reference only.",
-    },
-    {
-      factor_id: "THERMAL_SHOCK",
-      name: "Thermal Shock",
-      category: "Thermal",
-      data_available: false,
-      ML_feature: false,
-      engineering_context_only: true,
-      citation: "ECSS-Q-ST-60C Rev.4 Section 6.2",
-      standard_ref: "ECSS-Q-ST-60C Liquid-to-Liquid Shock",
-      notes: "Environmental qualification context factor. Not measured during steady-state DCL monitoring.",
-    },
-    {
-      factor_id: "VACUUM",
-      name: "Vacuum / Ambient Pressure",
-      category: "Atmospheric",
-      data_available: false,
-      ML_feature: false,
-      engineering_context_only: true,
-      citation: "ECSS-Q-ST-60-15C Space Vacuum Testing",
-      standard_ref: "ASTM E595 Outgassing Standard",
-      notes: "Context factor for high-altitude/orbital flight qualification. No pressure telemetry in test bay.",
-    },
-    {
-      factor_id: "HUMIDITY",
-      name: "Relative Humidity",
-      category: "Atmospheric",
-      data_available: false,
-      ML_feature: false,
-      engineering_context_only: true,
-      citation: "MIL-STD-202 Method 103 Moisture Resistance",
-      standard_ref: "JEDEC J-STD-020 Moisture Sensitivity",
-      notes: "Ambient humidity during post-bake handling. Provided for humidity-sensitive packaging context.",
-    },
-    {
-      factor_id: "VIBRATION",
-      name: "Random Vibration",
-      category: "Mechanical",
-      data_available: false,
-      ML_feature: false,
-      engineering_context_only: true,
-      citation: "NASA EEE-INST-002 Mechanical Screening",
-      standard_ref: "MIL-STD-202 Method 214",
-      notes: "Launch mechanical environment context. Burn-in tests performed in static thermal chamber bay.",
-    },
-    {
-      factor_id: "MECH_SHOCK",
-      name: "Mechanical Shock",
-      category: "Mechanical",
-      data_available: false,
-      ML_feature: false,
-      engineering_context_only: true,
-      citation: "MIL-STD-202 Method 213 Pulse Shock",
-      standard_ref: "MIL-STD-202 Method 213 Condition I",
-      notes: "Qualification context factor for launch separation loads.",
-    },
-    {
-      factor_id: "TID",
-      name: "Total Ionizing Dose (TID)",
-      category: "Radiation",
-      data_available: false,
-      ML_feature: false,
-      engineering_context_only: true,
-      citation: "ECSS-E-ST-10-12C Radiation Hardness Assurance",
-      standard_ref: "MIL-STD-883 Method 1019",
-      notes: "Orbital radiation context. Tantalum capacitors exhibit high natural TID tolerance; no radiation testing in this dataset.",
-    },
-    {
-      factor_id: "TNID",
-      name: "Displacement Damage (TNID)",
-      category: "Radiation",
-      data_available: false,
-      ML_feature: false,
-      engineering_context_only: true,
-      citation: "NASA GSFC Radiation Effects Group Guidelines",
-      standard_ref: "ASTM F1190 Neutron Irradiation",
-      notes: "Proton/neutron displacement damage context factor.",
-    },
-    {
-      factor_id: "SEE",
-      name: "Single Event Effects (SEE)",
-      category: "Radiation",
-      data_available: false,
-      ML_feature: false,
-      engineering_context_only: true,
-      citation: "JESD57 Heavy Ion Irradiation Standard",
-      standard_ref: "JESD57 Procedure for SEE",
-      notes: "Heavy ion Single Event Latchup/Burnout context factor.",
-    },
-    {
-      factor_id: "CONTAM",
-      name: "Molecular Contamination",
-      category: "Contamination",
-      data_available: false,
-      ML_feature: false,
-      engineering_context_only: true,
-      citation: "ECSS-Q-ST-70-01C Cleanliness & Contamination",
-      standard_ref: "ISO 14644-1 Cleanroom Class 8",
-      notes: "Handling cleanliness reference context.",
-    },
-    {
-      factor_id: "STORAGE",
-      name: "Storage & Shelf Life",
-      category: "Thermal",
-      data_available: false,
-      ML_feature: false,
-      engineering_context_only: true,
-      citation: "MIL-HDBK-113 Storage of Electronic Components",
-      standard_ref: "JEDEC J-STD-033 Dry Pack Storage",
-      notes: "Pre-screening dry pack storage duration context.",
+      status: durationStatus,
+      value_display: durationVal,
+      ML_feature: burnInHours !== undefined,
+      why_it_matters: "Recorded test elapsed time checkpoints for time-dependent DCL drift prediction.",
+      source: burnInHours !== undefined ? "Dataset / Test Checkpoints" : "System Registry",
+      standard_ref: "NASA EEE-INST-002 Table 2A",
     },
   ];
+
+  if (isTantalum) {
+    factors.push(
+      {
+        factor_id: "TEMP_CYC",
+        name: "Temperature Cycling",
+        category: "Thermal",
+        status: "CONTEXT ONLY",
+        value_display: "Not measured",
+        ML_feature: false,
+        why_it_matters: "Thermal expansion mismatch screening context for package integrity.",
+        source: "NASA EEE-INST-002 / MIL-STD-883",
+        standard_ref: "MIL-STD-883K Method 1010 Condition B",
+      },
+      {
+        factor_id: "THERMAL_SHOCK",
+        name: "Thermal Shock",
+        category: "Thermal",
+        status: "CONTEXT ONLY",
+        value_display: "Not measured",
+        ML_feature: false,
+        why_it_matters: "Liquid-to-liquid rapid thermal change qualification reference.",
+        source: "ECSS Standards",
+        standard_ref: "ECSS-Q-ST-60C Rev.4 Section 6.2",
+      },
+      {
+        factor_id: "HUMIDITY",
+        name: "Moisture Sensitivity / Humidity",
+        category: "Atmospheric",
+        status: "NOT AVAILABLE",
+        value_display: "Not measured",
+        ML_feature: false,
+        why_it_matters: "Moisture ingress degradation context for non-hermetic packaging.",
+        source: "MIL Standards",
+        standard_ref: "MIL-STD-202 Method 103",
+      },
+      {
+        factor_id: "VACUUM",
+        name: "Vacuum / Ambient Pressure",
+        category: "Atmospheric",
+        status: "NOT AVAILABLE",
+        value_display: "Not measured",
+        ML_feature: false,
+        why_it_matters: "High-altitude outgassing context for orbital operations.",
+        source: "NASA Outgassing Guidelines",
+        standard_ref: "ASTM E595 / ECSS-Q-ST-60-15C",
+      },
+      {
+        factor_id: "VIBRATION",
+        name: "Random Vibration",
+        category: "Mechanical",
+        status: "NOT AVAILABLE",
+        value_display: "Not measured",
+        ML_feature: false,
+        why_it_matters: "Launch mechanical stress environment context.",
+        source: "MIL Standards",
+        standard_ref: "MIL-STD-202 Method 214",
+      },
+      {
+        factor_id: "TID",
+        name: "Total Ionizing Dose (TID)",
+        category: "Radiation",
+        status: "NOT AVAILABLE",
+        value_display: "Not measured",
+        ML_feature: false,
+        why_it_matters: "Orbital radiation environment context.",
+        source: "NASA GSFC Radiation Group",
+        standard_ref: "MIL-STD-883 Method 1019",
+      }
+    );
+  }
+
+  return factors;
 }
