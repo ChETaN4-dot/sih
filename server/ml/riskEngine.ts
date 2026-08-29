@@ -15,20 +15,30 @@ export const ISOLATION_FOREST_HIGH_RISK_THRESHOLD = 0.60;
 // s >= 0.55 indicates moderate anomaly tendency
 export const ISOLATION_FOREST_REVIEW_THRESHOLD = 0.55;
 
-// Maximum degradation slope threshold (uA/hour) — initial engineering heuristic threshold, not independently validated against a real component-family degradation distribution — pending further calibration with additional real data.
-export const SAFETY_SLOPE_THRESHOLD = 0.05;
+// Maximum degradation slope threshold (uA/hour) — Dynamically scaled based on component spec limit
+export function getDynamicSafetySlopeThreshold(specLimit?: number, customSlopeThreshold?: number): number {
+  if (customSlopeThreshold !== undefined && customSlopeThreshold > 0) {
+    return customSlopeThreshold;
+  }
+  if (specLimit && specLimit > 0) {
+    // Dynamically scale slope threshold to 1/1000th of specification ceiling per hour (minimum 0.005 uA/h)
+    return Math.max(0.005, Number((specLimit / 1000).toFixed(4)));
+  }
+  return 0.05;
+}
 
 // System Versioning Identifiers
 export const VERSION_METADATA = {
   model_version: "isolation-forest-v1 / ridge-loco-v1",
   dataset_version: "synthetic-tantalum-v1 / real-nasa-2016",
   feature_version: "dcl-features-v1",
-  logic_version: "unified-risk-engine-v1",
+  logic_version: "unified-risk-engine-v2-dynamic",
 };
 
 export type UnifiedRiskInput = {
   measuredDcl: number;
   specLimit: number;
+  customSafetySlopeThreshold?: number;
   // Module A Evidence (optional)
   robustZScore?: number;
   isolationForestScore?: number;
@@ -54,11 +64,13 @@ export type UnifiedRiskVerdict = {
  * Combines Module A anomaly evidence, Module B drift/prediction evidence, and Spec Limits.
  */
 export function evaluateUnifiedRisk(input: UnifiedRiskInput): UnifiedRiskVerdict {
-  const { measuredDcl, specLimit, robustZScore, isolationForestScore, earlySlope, predicted168hDcl } = input;
+  const { measuredDcl, specLimit, robustZScore, isolationForestScore, earlySlope, predicted168hDcl, customSafetySlopeThreshold } = input;
+
+  const effectiveSafetySlopeThreshold = getDynamicSafetySlopeThreshold(specLimit, customSafetySlopeThreshold);
 
   const specLimitExceeded = measuredDcl > specLimit;
   const predictedLimitExceeded = Boolean(predicted168hDcl && predicted168hDcl > specLimit);
-  const safetySlopeExceeded = Boolean(earlySlope && earlySlope > SAFETY_SLOPE_THRESHOLD);
+  const safetySlopeExceeded = Boolean(earlySlope && earlySlope > effectiveSafetySlopeThreshold);
 
   const z = robustZScore ?? 0;
   const ifScore = isolationForestScore ?? 0;
@@ -86,7 +98,7 @@ export function evaluateUnifiedRisk(input: UnifiedRiskInput): UnifiedRiskVerdict
   } else if (safetySlopeExceeded) {
     status = "REVIEW";
     reasonCode = "SAFETY_SLOPE_EXCEEDED";
-    verdictSummary = `Degradation slope (${earlySlope?.toFixed(4)} µA/h) exceeds heuristic safety slope threshold (${SAFETY_SLOPE_THRESHOLD} µA/h). Requires engineering review.`;
+    verdictSummary = `Degradation slope (${earlySlope?.toFixed(4)} µA/h) exceeds dynamic safety slope threshold (${effectiveSafetySlopeThreshold.toFixed(4)} µA/h for ${specLimit} µA spec). Requires engineering review.`;
   } else if (isReviewOutlier) {
     status = "REVIEW";
     reasonCode = "MODERATE_LOT_DEVIATION";

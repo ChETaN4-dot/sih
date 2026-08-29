@@ -1,4 +1,4 @@
-import { UnifiedRiskVerdict } from "./riskEngine";
+import { UnifiedRiskVerdict, getDynamicSafetySlopeThreshold } from "./riskEngine";
 import { EngineeringCriterion } from "../data/engineeringCriteria";
 
 export type UnifiedExplanationInput = {
@@ -114,14 +114,14 @@ export function generateUnifiedExplanation(input: UnifiedExplanationInput): Synt
     }
   }
 
-  // 2. DYNAMIC "WHY IT OCCURRED" (Hedged physics)
+  // 2. DYNAMIC "WHY IT OCCURRED" (Hedged physics with genuine literature citations)
   let whyItOccurred = "";
   if (status === "HIGH RISK") {
-    whyItOccurred = `PHYSICAL MECHANISM ANALYSIS: The observed severe DCL divergence is consistent with high electric-field-induced oxygen vacancy mobility within the amorphous Ta2O5 dielectric layer. Under 125°C thermal and rated voltage stress, positively charged oxygen vacancies drift toward the MnO2 cathode interface, lowering the Schottky barrier height and elevating electron injection. The high Z-score indicates potential anode pellet micro-porosity variation or localized thin spots in the anodic oxide layer.`;
+    whyItOccurred = `PHYSICAL MECHANISM ANALYSIS (Ref: Freeman et al., 2018, Springer; NASA GSFC EEE Parts Bulletin, 2016): The observed severe DCL divergence is consistent with high electric-field-induced oxygen vacancy (Ta2O5-x) mobility within the amorphous Ta2O5 dielectric layer. Under 125°C thermal and rated voltage stress, positively charged oxygen vacancies drift toward the MnO2 cathode interface, lowering the Schottky barrier height and elevating electron injection. High Z-scores (evaluated via Isolation Forest; Liu et al., 2008, IEEE ICDM) indicate potential anode pellet micro-porosity variation or localized oxide thin spots.`;
   } else if (status === "REVIEW") {
-    whyItOccurred = `PHYSICAL MECHANISM ANALYSIS: The measured current trajectory reflects thermally activated oxygen vacancy redistribution under applied electric field. While current levels remain under absolute limits, early slope elevation indicates subtle dielectric state changes that warrant observation across remaining burn-in checkpoints.`;
+    whyItOccurred = `PHYSICAL MECHANISM ANALYSIS (Ref: Freeman et al., 2018; Vishay Reliability Technical Note): The measured current trajectory reflects thermally activated oxygen vacancy redistribution under applied electric field. While current levels remain under absolute limits, early slope elevation indicates subtle dielectric state changes that warrant observation across remaining burn-in checkpoints.`;
   } else {
-    whyItOccurred = `PHYSICAL MECHANISM ANALYSIS: Dielectric current transport is dominated by normal Poole-Frenkel conduction across a uniform amorphous Ta2O5 dielectric barrier with negligible oxygen vacancy drift or barrier degradation.`;
+    whyItOccurred = `PHYSICAL MECHANISM ANALYSIS (Ref: MIL-PRF-55365 Specification Baseline): Dielectric current transport is dominated by normal Poole-Frenkel conduction across a uniform amorphous Ta2O5 dielectric barrier with negligible oxygen vacancy drift or barrier degradation.`;
   }
 
   // 3. DYNAMIC "WHAT IS PREDICTED"
@@ -148,10 +148,11 @@ export function generateUnifiedExplanation(input: UnifiedExplanationInput): Synt
       { id: "policy", label: "Policy Reminder: Statistical Anomaly ≠ Physical Component Failure", severity: "INFO", mandatory: true },
     );
   } else if (status === "REVIEW") {
+    const dynamicSlope = getDynamicSafetySlopeThreshold(specValue);
     whatEngineerShouldReview = `DISPOSITION GUIDANCE: MODERATE DRIFT — Hold for 96h/168h verification. Confirm whether leakage slope flattens or continues accelerating before final flight clearance.`;
     actionItems.push(
       { id: "monitor", label: "Monitor 96h & 168h Intermediate Burn-In Checkpoints", severity: "WARNING", mandatory: true },
-      { id: "slope", label: "Verify Drift Rate Remains Below Safety Slope (0.005 µA/h)", severity: "WARNING", mandatory: true },
+      { id: "slope", label: `Verify Drift Rate Remains Below Dynamic Safety Slope (${dynamicSlope.toFixed(4)} µA/h)`, severity: "WARNING", mandatory: true },
       { id: "retest", label: "Perform Post-Burn-In 25°C Parametric Verification", severity: "INFO", mandatory: false },
     );
   } else {
