@@ -259,7 +259,7 @@ export default function UnifiedAnalysis() {
                   <div style={{ height: "100%", width: `${Math.min(100, data.explanation.specMarginPct)}%`, background: "#d6f24a" }} />
                 </div>
                 <span style={{ fontSize: "11px", color: "#8a9588", fontFamily: "IBM Plex Mono" }}>
-                  Current DCL: {data.component.measurements[data.component.measurements.length - 1]?.dcl_uA.toFixed(2)} / {data.criterion.value} µA
+                  Current DCL: {data.component.measurements[data.component.measurements.length - 1]?.dcl_uA.toFixed(2)} / {data.specCriterion?.value ?? 50.0} µA
                 </span>
               </div>
 
@@ -280,7 +280,7 @@ export default function UnifiedAnalysis() {
               {/* Card 3: 168h Forecast Comparison */}
               <div style={{ background: "#161a18", border: "1px solid #334038", padding: "16px", borderRadius: "4px" }}>
                 <span style={{ fontSize: "10px", fontFamily: "IBM Plex Mono", color: "#8a9588" }}>168H FORECAST (RIDGE)</span>
-                <div style={{ fontSize: "22px", fontWeight: "bold", color: data.drift.predictions?.ridge.predicted168h && data.drift.predictions.ridge.predicted168h > data.criterion.value ? "#e57463" : "#edf0e6", margin: "6px 0 4px" }}>
+                <div style={{ fontSize: "22px", fontWeight: "bold", color: data.drift.predictions?.ridge.predicted168h && data.drift.predictions.ridge.predicted168h > (data.specCriterion?.value ?? 50.0) ? "#e57463" : "#edf0e6", margin: "6px 0 4px" }}>
                   {data.drift.predictions?.ridge.predicted168h.toFixed(2)} µA
                 </div>
                 <div style={{ fontSize: "11px", color: "#8a9588", fontFamily: "IBM Plex Mono", lineHeight: "1.4" }}>
