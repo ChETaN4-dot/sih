@@ -146,8 +146,8 @@ export default function ModuleA() {
             <p style={{ margin: 0, color: "#f6c4ba", fontSize: "14px", lineHeight: "1.5" }}>
               {analysis.message}
             </p>
-            <p style={{ margin: "10px 0 15px", color: "#9ba69b", fontSize: "12px", lineHeight: "1.5" }}>
-              Note: A single component or small batch cannot independently establish a lot-level baseline ($N \ge 10$ required for Isolation Forest & Median/MAD robust scoring). However, you can analyze these components individually in Module B.
+            <p style={{ margin: "0 0 15px", color: "#a6b2a5", fontSize: "13px", lineHeight: "1.5" }}>
+              Note: A single component or small batch cannot independently establish a lot-level baseline (N ≥ 10 required for Isolation Forest & Median/MAD robust scoring). However, you can analyze these components individually in Module B.
             </p>
             {analysis.components && analysis.components.length > 0 && (
               <button
