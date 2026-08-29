@@ -1,0 +1,74 @@
+[
+  {
+    "component_id": "TAL-A-005",
+    "lot_id": "LOT-A",
+    "severity_level": "OBVIOUS",
+    "injected_behavior": "Severe DCL jump (0.85 -> 8.45 -> 48.20 uA) near 50uA spec limit."
+  },
+  {
+    "component_id": "TAL-B-004",
+    "lot_id": "LOT-B",
+    "severity_level": "OBVIOUS",
+    "injected_behavior": "Severe DCL jump (0.90 -> 6.80 -> 38.50 uA)."
+  },
+  {
+    "component_id": "TAL-C-005",
+    "lot_id": "LOT-C",
+    "severity_level": "OBVIOUS",
+    "injected_behavior": "Severe DCL jump (0.88 -> 7.80 -> 44.30 uA)."
+  },
+  {
+    "component_id": "TAL-A-008",
+    "lot_id": "LOT-A",
+    "severity_level": "MODERATE",
+    "injected_behavior": "Accelerated drift (0.86 -> 2.80 -> 12.40 uA), ~2.5x lot normal drift rate."
+  },
+  {
+    "component_id": "TAL-B-008",
+    "lot_id": "LOT-B",
+    "severity_level": "MODERATE",
+    "injected_behavior": "Accelerated drift (0.88 -> 2.90 -> 13.10 uA), ~2.5x lot normal drift rate."
+  },
+  {
+    "component_id": "TAL-C-008",
+    "lot_id": "LOT-C",
+    "severity_level": "MODERATE",
+    "injected_behavior": "Accelerated drift (0.85 -> 2.75 -> 11.90 uA), ~2.5x lot normal drift rate."
+  },
+  {
+    "component_id": "TAL-A-012",
+    "lot_id": "LOT-A",
+    "severity_level": "SUBTLE",
+    "injected_behavior": "Subtle elevated drift (0.87 -> 1.35 -> 3.90 uA vs lot median 2.65 uA), Z ~ 2.1 MAD."
+  },
+  {
+    "component_id": "TAL-A-015",
+    "lot_id": "LOT-A",
+    "severity_level": "SUBTLE",
+    "injected_behavior": "Subtle elevated drift (0.93 -> 1.40 -> 4.10 uA vs lot median 2.65 uA), Z ~ 2.3 MAD."
+  },
+  {
+    "component_id": "TAL-B-012",
+    "lot_id": "LOT-B",
+    "severity_level": "SUBTLE",
+    "injected_behavior": "Subtle elevated drift (0.92 -> 1.38 -> 4.00 uA vs lot median 2.70 uA), Z ~ 2.1 MAD."
+  },
+  {
+    "component_id": "TAL-B-015",
+    "lot_id": "LOT-B",
+    "severity_level": "SUBTLE",
+    "injected_behavior": "Subtle elevated drift (0.97 -> 1.42 -> 4.20 uA vs lot median 2.70 uA), Z ~ 2.3 MAD."
+  },
+  {
+    "component_id": "TAL-C-012",
+    "lot_id": "LOT-C",
+    "severity_level": "SUBTLE",
+    "injected_behavior": "Subtle elevated drift (0.88 -> 1.25 -> 3.40 uA vs lot median 2.60 uA), Z ~ 1.8 MAD."
+  },
+  {
+    "component_id": "TAL-C-015",
+    "lot_id": "LOT-C",
+    "severity_level": "SUBTLE",
+    "injected_behavior": "Subtle elevated drift (0.77 -> 1.15 -> 3.20 uA vs lot median 2.60 uA), Z ~ 1.5 MAD."
+  }
+]
