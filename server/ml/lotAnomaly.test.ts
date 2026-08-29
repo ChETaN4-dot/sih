@@ -5,11 +5,10 @@ describe("Module A — Lot Anomaly Detection Engine", () => {
   it("enforces minimum lot size threshold of 10 components", () => {
     expect(MIN_LOT_SIZE_FOR_ANOMALY_DETECTION).toBe(10);
 
-    // NASA real dataset lot has only 4 components
+    // NASA real dataset lot now has 12 components (>= 10)
     const res = analyzeLotAnomalies("NASA-HALT-85C-6V8F-35V");
-    expect(res.sufficient).toBe(false);
-    expect(res.components).toHaveLength(0);
-    expect(res.message).toContain("Lot-level anomaly detection requires at least 10 comparable components");
+    expect(res.sufficient).toBe(true);
+    expect(res.totalComponentsInLot).toBe(12);
   });
 
   it("accurately detects injected anomaly TAL-A-005 in LOT-A as HIGH RISK", () => {
